@@ -1,0 +1,75 @@
+# Top Three Salaries — interview setup cell
+# Paste into the first cell of the Workbench notebook and run. No network, no BigQuery needed.
+#
+# Gives the candidate:
+#   employees, departments  -> pandas DataFrames
+#   sql("...")              -> runs SQL against the same tables (in-memory SQLite), returns a DataFrame
+
+import sqlite3
+import pandas as pd
+
+departments = pd.DataFrame({
+    "id": [1, 2, 3, 4],
+    "name": ["Engineering", "Marketing", "Sales", "Legal"],
+})
+
+employees = pd.DataFrame({
+    "id":            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "first_name":    ["Ava", "Ben", "Cara", "Dev", "Eli", "Fay", "Gus", "Hal", "Ivy", "Jon", "Kim", "Lou"],
+    "last_name":     ["Ng", "Ortiz", "Patel", "Quinn", "Reyes", "Shah", "Tran", "Usman", "Vega", "Wu", "Xu", "Young"],
+    "salary":        [150000, 140000, 130000, 130000, 110000,   # Engineering: tie at #3
+                      95000, 90000,                              # Marketing: only 2 people
+                      80000, 80000, 80000, 70000,                # Sales: three-way tie at #1
+                      60000],                                    # Legal: 1 person
+    "department_id": [1, 1, 1, 1, 1, 2, 2, 3, 3, 3, 3, 4],
+})
+
+_conn = sqlite3.connect(":memory:")
+employees.to_sql("employees", _conn, index=False)
+departments.to_sql("departments", _conn, index=False)
+
+
+def sql(query: str) -> pd.DataFrame:
+    return pd.read_sql(query, _conn)
+
+
+# Prompt for the candidate:
+# Return the top 3 highest salaries in each department, with the employee's full name.
+# If a department has fewer than 3 employees, return however many it has.
+# Output columns: employee_name, department_name, salary
+# Order by department_name ascending, then salary descending.
+
+
+
+WITH CTE AS (
+    SELECT CONCAT(a.first_name, " ", a.last_name) as employee_name,
+    a.salary, b.name as department_name,
+    RANK() OVER(
+        PARTITION BY b.name
+        ORDER BY SALARY DESC
+    ) as salary_rank
+    from employees a 
+    left join departments b 
+    on a.department_id = b.id
+)
+
+select employee_name, department_name, salary
+from CTE where salary_rank <=3
+order by department_name ASC, SALARY DESC
+
+
+
+import pandas as pd
+
+def top_three_salaries(departments: pd.DataFrame, employees: pd.DataFrame):
+    departments = departments.rename(columns = {"id": "department_id", "name": "department_name"})
+    merged = pd.merge(employees, departments, on = 'department_id', how = 'left')
+    merged['employee_name'] = merged['first_name'] + " " + merged["last_name"]
+    merged['salary_rank'] = (
+        merged.groupby('department_name')['salary'].rank(method='min', ascending=False)
+    )
+
+    a = merged[merged['salary_rank']<4][['employee_name', 'department_name', 'salary']]
+    a = a.sort_values(by=['department_name', 'salary'], ascending=[True, False])
+    return a
+
