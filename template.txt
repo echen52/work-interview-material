@@ -1,0 +1,61 @@
+Analyze this codebase and write a single file called GEMINI_BASELINE.md in the project root. Do not modify any other files.
+
+Context: This folder is a proof-of-concept ADK agent. It will be replaced by a new, more complex ADK agent in a separate folder, built on a completely different set of detection guidelines and business logic. GEMINI_BASELINE.md will become the starting point for the GEMINI.md context file in that new agent folder. Write it for a model (Gemini CLI) that will be building the new agent, not for a human reader.
+
+Writing style:
+- Terse and directive. Prefer "Use X for Y" and "Do not Z" over explanation.
+- Bullets over prose. No introductions, no summaries of what you're about to say.
+- Cite file paths and function/class names from this POC so the builder can look up reference implementations.
+- Mark each pattern as [REUSE] (carry over as-is), [ADAPT] (keep the pattern, change details), or [REFERENCE] (look at it for ideas, don't copy).
+
+Rules:
+- Stay at the level of infrastructure, architecture, and conventions. Do NOT include the specific detection rules, red flags, thresholds, scoring logic, or domain reasoning. Those are being replaced. Where reusable plumbing is entangled with domain logic, describe the plumbing and note the entanglement.
+- Do not include credentials, project IDs, service account details, sample data, customer or account values, or query results. Refer to config by file and variable name only.
+- Read every relevant file before writing.
+- If unsure whether something carries over, include it with a short note on why.
+
+Structure:
+
+## Project overview
+- 3–5 bullets: what kind of agent this is (generically), ADK version, language/runtime, how it's run.
+
+## ADK conventions
+- Agent definition pattern, sub-agent structure, tool registration, runner setup, session/state handling, callbacks, invocation.
+- Include brief code-shape examples (signatures and structure only, no domain content) where it helps the builder match the pattern.
+
+## BigQuery data access
+- Every table/view referenced, with the columns used and whether it's read or written. Note: this is the current baseline; the new agent may add tables.
+- How the BQ client is created and authenticated.
+- How queries are built (parameterized, templated, hardcoded) and which approach to keep.
+- Generic join/filter logic worth reusing.
+
+## Tools
+- Each tool: name, signature, what it returns, whether it's generic or domain-bound.
+
+## LLM configuration
+- Models, generation settings, structured output / response schemas.
+- Prompt structure conventions (sections, ordering, formatting). Describe the structure, not the domain content.
+
+## Data flow
+- Input preprocessing → model → output parsing → where results are written.
+
+## Config and environment
+- Config files, env vars (names only), constants, setup and run commands.
+
+## Error handling and logging
+- Retry, error handling, and logging patterns to keep.
+
+## Testing and evaluation
+- Existing tests, eval scripts, or validation approaches.
+
+## Dependencies
+- Packages and pinned versions.
+
+## Do not carry over
+- POC shortcuts, hardcoded values, and anything tightly bound to the old logic.
+
+## Known issues and lessons
+- Workarounds, TODOs, and comments that point to problems the new build should solve properly.
+
+## Open questions
+- Anything you couldn't determine from the code.
