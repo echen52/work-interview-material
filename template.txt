@@ -1,61 +1,32 @@
-Analyze this codebase and write a single file called GEMINI_BASELINE.md in the project root. Do not modify any other files.
+Analyze this codebase and write two files in the project root. Do not modify any other files.
 
-Context: This folder is a proof-of-concept ADK agent. It will be replaced by a new, more complex ADK agent in a separate folder, built on a completely different set of detection guidelines and business logic. GEMINI_BASELINE.md will become the starting point for the GEMINI.md context file in that new agent folder. Write it for a model (Gemini CLI) that will be building the new agent, not for a human reader.
+Context: This folder is a proof-of-concept ADK agent. It will be replaced by a new, more complex ADK agent in a separate folder, built on a completely different set of detection guidelines and business logic. The new agent's Gemini CLI session will NOT have access to this folder.
 
-Writing style:
-- Terse and directive. Prefer "Use X for Y" and "Do not Z" over explanation.
-- Bullets over prose. No introductions, no summaries of what you're about to say.
-- Cite file paths and function/class names from this POC so the builder can look up reference implementations.
-- Mark each pattern as [REUSE] (carry over as-is), [ADAPT] (keep the pattern, change details), or [REFERENCE] (look at it for ideas, don't copy).
+Rules for both files:
+- DO include the exact GCP project ID(s), dataset ID(s), fully qualified table names, service account email(s), region/location, and the authentication method (e.g., ADC, key file, impersonation). The new agent uses the same databases.
+- Do NOT include secret values: service account key file contents, private keys, tokens, passwords, or API keys. Instead, record where each secret is loaded from (env var name, key file path, or Secret Manager reference) so the new agent can load it the same way.
+- Do not include sample data, customer or account values, or query results.
 
-Rules:
-- Stay at the level of infrastructure, architecture, and conventions. Do NOT include the specific detection rules, red flags, thresholds, scoring logic, or domain reasoning. Those are being replaced. Where reusable plumbing is entangled with domain logic, describe the plumbing and note the entanglement.
-- Do not include credentials, project IDs, service account details, sample data, customer or account values, or query results. Refer to config by file and variable name only.
-- Read every relevant file before writing.
-- If unsure whether something carries over, include it with a short note on why.
+FILE 1: GEMINI_BASELINE.md
+This becomes the starting GEMINI.md for the new agent. It must be fully self-contained: the reader cannot open any file from this POC.
+- Write for a model, not a human. Terse, directive bullets ("Use X for Y", "Do not Z"). No introductions.
+- Do not reference POC file paths. Instead, include the actual patterns as short code snippets (signatures, structure, and generic logic only, with placeholders for IDs and no domain content).
+- Describe conventions as rules for the new build, not as a history of the old one.
 
-Structure:
+Sections:
+## Project overview: agent type (generic), ADK version, language/runtime, how it's run.
+## ADK conventions: agent definition, sub-agent structure, tool registration, runner, session/state, callbacks, invocation. Include code-shape examples.
+## BigQuery data access: each table/view with columns used, data types if visible, and read vs. write. Mark this list as the current baseline that may expand. Include the BQ client setup/auth pattern and the query-building pattern as code snippets. Include generic join/filter logic.
+## Tools: each generic tool's signature, inputs, and return shape.
+## LLM configuration: models, generation settings, structured output / response schemas (as code), and prompt structure conventions (structure only, no domain content).
+## Data flow: input preprocessing → model → output parsing → output destination.
+## Config and environment: env var names, config structure, setup and run commands.
+## Error handling and logging: patterns to follow, as short snippets where useful.
+## Dependencies: packages and pinned versions.
 
-## Project overview
-- 3–5 bullets: what kind of agent this is (generically), ADK version, language/runtime, how it's run.
-
-## ADK conventions
-- Agent definition pattern, sub-agent structure, tool registration, runner setup, session/state handling, callbacks, invocation.
-- Include brief code-shape examples (signatures and structure only, no domain content) where it helps the builder match the pattern.
-
-## BigQuery data access
-- Every table/view referenced, with the columns used and whether it's read or written. Note: this is the current baseline; the new agent may add tables.
-- How the BQ client is created and authenticated.
-- How queries are built (parameterized, templated, hardcoded) and which approach to keep.
-- Generic join/filter logic worth reusing.
-
-## Tools
-- Each tool: name, signature, what it returns, whether it's generic or domain-bound.
-
-## LLM configuration
-- Models, generation settings, structured output / response schemas.
-- Prompt structure conventions (sections, ordering, formatting). Describe the structure, not the domain content.
-
-## Data flow
-- Input preprocessing → model → output parsing → where results are written.
-
-## Config and environment
-- Config files, env vars (names only), constants, setup and run commands.
-
-## Error handling and logging
-- Retry, error handling, and logging patterns to keep.
-
-## Testing and evaluation
-- Existing tests, eval scripts, or validation approaches.
-
-## Dependencies
-- Packages and pinned versions.
-
-## Do not carry over
-- POC shortcuts, hardcoded values, and anything tightly bound to the old logic.
-
-## Known issues and lessons
-- Workarounds, TODOs, and comments that point to problems the new build should solve properly.
-
-## Open questions
-- Anything you couldn't determine from the code.
+FILE 2: MIGRATION_NOTES.md
+This is for the human engineer, not the model. Here you may reference POC file paths.
+- Files or functions worth copying directly into the new folder, with paths.
+- Components that should NOT carry over (POC shortcuts, hardcoded values, logic tightly bound to the old detection approach), and why.
+- Known issues, workarounds, and TODOs from the code that the new build should solve properly.
+- Open questions you couldn't answer from the code.
