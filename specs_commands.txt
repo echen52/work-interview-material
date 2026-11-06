@@ -1,40 +1,81 @@
-Do NOT write application code or execute shell commands in this session. Only create/edit files under <NEW>/planning/ and <NEW>/GEMINI.md.
+Read @<PATH>/agent_instructions.md and @<PATH>/<indicators_file> in full.
 
-Project context:
-- <POC>/ is a working proof-of-concept AML detection and reasoning agent built in Google ADK: a SequentialAgent with an investigator and an assessor. The investigator uses alerted transactions, customer information, and deterministic tools, and maps evidence to red-flag indicators to make claims. The assessor sees only the tool log and findings (not the investigator's reasoning) and validates or refutes each claim. A summary report is then generated.
-- <NEW>/ is the rebuild. <SPEC> is an executive-written, AI-generated instruction document — a mix of workflow ideas and wish list. It is NOT an implementation spec. The main goal of this project's planning phase is to convert it into a real implementation spec.
-- <INDICATORS> is the fixed red-flag indicator set. It is final: never modify, extend, merge, or re-categorize it. Planning only specifies how the agent consumes it.
-- <NEW>/docs/ holds reference documents.
-- Environment: google-adk 1.27.5, google-genai 1.60.0, BigQuery, GCP Workbench. Input is run_id only; cust_id is derived from it.
+Context: agent_instructions.md was written by executives as instructions for an AML detection and reasoning agent. It reads like a mix of a workflow idea and a wish list — it is not an implementation spec. The indicator file is a fixed, final set of red-flag indicators: do not modify, extend, merge, or re-categorize it.
 
-Tasks:
-1. Create <NEW>/planning/ with: context.md, spec.md, spec_review.md, build_plan.md, assumptions_and_questions.md, session_log.md (each with a title and one-line purpose).
-2. Create <NEW>/GEMINI.md with the project context above, the planning file list, and these rules: spec.md is the source of truth for what to build; the indicator set is fixed; never invent data sources or table names — mark UNKNOWN; where the wishlist is vague, make a concrete assumption, label it ASSUMPTION, and record it in assumptions_and_questions.md; do not modify <POC>/.
-3. If GEMINI.md already exists, keep its content and append a section instead.
-4. Log the session in session_log.md.
+Your goal over the next steps is to convert agent_instructions.md into an implementation spec. In this step, ONLY propose the process flow. Do not write the full spec yet. Do not write code.
+
+Do the following:
+1. In 3–5 sentences, state what the agent is supposed to accomplish end to end, as you understand it from the instructions.
+2. Propose the ordered stages of the agent's workflow (typically 5–9 stages). Put them in the order the agent would actually execute them, even if the instructions mention them in a different order. For each stage give:
+   - Stage name
+   - One sentence: what it does
+   - Whether it should be deterministic code, an LLM step, or a hybrid, and why (one line)
+   - What it needs as input and what it produces (one line each)
+   - Which parts of agent_instructions.md it comes from (short quotes or section names)
+3. Explain how the indicator set is used across the flow: which stage(s) consume it, and whether the agent evaluates every indicator or first narrows to relevant ones.
+4. List anything in the instructions that doesn't fit into any stage, and anything the flow logically needs that the instructions never mention.
+5. Show the flow as a Mermaid flowchart.
+
+[OPTIONAL — include if you want this principle:] Design principle: the stage that validates or refutes findings must be independent of the stage that makes them. It sees only the evidence and the findings, not the reasoning that produced them.
+
+Write this to planning/process_flow.md, then stop and wait for my feedback.
 
 
-Read @<NEW>/GEMINI.md. Then read in full: every code/config/json/md/sql file under <POC>/, every file under <NEW>/docs/, and <INDICATORS>. Do not modify anything or execute anything. If a file can't be read, say so — don't guess.
+____
 
-Write planning/context.md — a concise reference for writing the spec, not an exhaustive inventory:
 
-1. POC summary
-   - Agent structure: each agent, its role, tools, output_key, and what state it reads/writes (file:line references)
-   - Tools: name, what it does, data source (BQ tables/fields), returns
-   - Data: how alerted transactions and customer info are loaded and what fields are used
-   - How indicators are fed to the investigator
-   - The investigator → assessor cutoff: exactly what the assessor gets and how that's enforced
-   - Claim, verdict, and report formats
-   - Entry point and how a run executes
-   - What's worth reusing vs. what should be rewritten, and why
-2. Indicator file
-   - Structure (fields per indicator, count, how they're organized)
-   - What each indicator entry gives the agent (description only? data hints? thresholds?) and what it doesn't
-   - Do not summarize or restate individual indicators
-3. Reference docs
-   - One short paragraph per doc: what it is and what it contributes to the spec (procedure steps, data definitions, report templates, rules)
-   - Note which doc sections the spec should follow directly
-4. Available data
-   - BQ tables/fields known to be accessible (from the POC or docs), and anything referenced but unconfirmed (UNKNOWN)
+Read @planning/process_flow.md (approved), @<PATH>/agent_instructions.md, and @<PATH>/<indicators_file>.
 
-Log the session in session_log.md.
+Now write the implementation spec to planning/spec.md, following the approved process flow exactly — same stages, same order. Do not add or remove stages without asking me.
+
+Write in prescriptive language ("This stage shall…"). Be concrete enough that an engineer could build and test each stage without re-reading agent_instructions.md. Where the instructions are vague, pick a specific, reasonable behavior and mark it inline as [ASSUMPTION: what you chose; alternative: what else it could mean]. Do not name specific databases or tables — describe each data need in plain terms (what data, about whom, over what period).
+
+Spec structure:
+
+## 1. Overview
+Purpose, scope for v1, and what's explicitly out of scope.
+
+## 2. Inputs
+What the agent receives to start a run, and every piece of data it needs over the run (described in plain terms).
+
+## 3. Process flow
+The approved stage list and Mermaid diagram.
+
+## 4. Stages
+For each stage, use exactly this template:
+
+### Stage N: <name>
+**Purpose:** one or two sentences.
+**Type:** deterministic / LLM / hybrid.
+**Inputs:** exactly what it receives and from which earlier stage.
+**Behavior:** numbered steps describing what the stage does, including decisions it makes and the rules for making them.
+**Indicator usage:** (if applicable) which indicator fields it uses and how — e.g., how it decides an indicator is relevant, what counts as supporting evidence, what counts as contradicting evidence.
+**Edge cases:** what happens with no data, partial data, conflicting data, or an error.
+**Output:** the exact structure it produces, as a field list (name, type, description), followed by a short example.
+**LLM instruction requirements:** (LLM stages only) the specific behaviors its prompt must enforce, carried over from agent_instructions.md.
+**Acceptance criteria:** 3–5 concrete checks that prove the stage works.
+
+## 5. Final report
+Sections in order; what each contains; which stage outputs feed it; how each finding links to its evidence and indicator.
+
+## 6. Cross-cutting requirements
+Logging/audit trail per run, consistency across repeated runs, error handling.
+
+## 7. Assumptions and open questions
+Collect every [ASSUMPTION] from the spec in a numbered list: the instruction it came from, what was chosen, the alternative. Then list open questions that can't be resolved by assumption.
+
+Write one stage at a time, completely, before moving to the next. When done, tell me which stages had the most assumptions.
+
+
+____
+
+
+Read @planning/spec.md and @<PATH>/agent_instructions.md. Review the spec critically and fix it in place:
+
+1. Coverage: list anything asked for in agent_instructions.md that the spec doesn't address. Add it to the right stage, or to section 7 as out of scope with a reason.
+2. Vague language: find any behavior described with words like "analyze", "consider", "assess", "evaluate", "appropriately", "relevant", or "as needed" without a concrete rule. Replace each with specific steps or decision criteria, or mark it [ASSUMPTION].
+3. Contracts: check that every stage's inputs are produced by an earlier stage, and every output is used by a later stage or the report. Fix any mismatches.
+4. Testability: rewrite any acceptance criterion that couldn't be checked by looking at a run's output.
+5. Indicators: confirm the indicator set is used as-is and never altered.
+
+List every change you made, grouped by stage.
