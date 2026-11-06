@@ -1,0 +1,40 @@
+Do NOT write application code or execute shell commands in this session. Only create/edit files under <NEW>/planning/ and <NEW>/GEMINI.md.
+
+Project context:
+- <POC>/ is a working proof-of-concept AML detection and reasoning agent built in Google ADK: a SequentialAgent with an investigator and an assessor. The investigator uses alerted transactions, customer information, and deterministic tools, and maps evidence to red-flag indicators to make claims. The assessor sees only the tool log and findings (not the investigator's reasoning) and validates or refutes each claim. A summary report is then generated.
+- <NEW>/ is the rebuild. <SPEC> is an executive-written, AI-generated instruction document — a mix of workflow ideas and wish list. It is NOT an implementation spec. The main goal of this project's planning phase is to convert it into a real implementation spec.
+- <INDICATORS> is the fixed red-flag indicator set. It is final: never modify, extend, merge, or re-categorize it. Planning only specifies how the agent consumes it.
+- <NEW>/docs/ holds reference documents.
+- Environment: google-adk 1.27.5, google-genai 1.60.0, BigQuery, GCP Workbench. Input is run_id only; cust_id is derived from it.
+
+Tasks:
+1. Create <NEW>/planning/ with: context.md, spec.md, spec_review.md, build_plan.md, assumptions_and_questions.md, session_log.md (each with a title and one-line purpose).
+2. Create <NEW>/GEMINI.md with the project context above, the planning file list, and these rules: spec.md is the source of truth for what to build; the indicator set is fixed; never invent data sources or table names — mark UNKNOWN; where the wishlist is vague, make a concrete assumption, label it ASSUMPTION, and record it in assumptions_and_questions.md; do not modify <POC>/.
+3. If GEMINI.md already exists, keep its content and append a section instead.
+4. Log the session in session_log.md.
+
+
+Read @<NEW>/GEMINI.md. Then read in full: every code/config/json/md/sql file under <POC>/, every file under <NEW>/docs/, and <INDICATORS>. Do not modify anything or execute anything. If a file can't be read, say so — don't guess.
+
+Write planning/context.md — a concise reference for writing the spec, not an exhaustive inventory:
+
+1. POC summary
+   - Agent structure: each agent, its role, tools, output_key, and what state it reads/writes (file:line references)
+   - Tools: name, what it does, data source (BQ tables/fields), returns
+   - Data: how alerted transactions and customer info are loaded and what fields are used
+   - How indicators are fed to the investigator
+   - The investigator → assessor cutoff: exactly what the assessor gets and how that's enforced
+   - Claim, verdict, and report formats
+   - Entry point and how a run executes
+   - What's worth reusing vs. what should be rewritten, and why
+2. Indicator file
+   - Structure (fields per indicator, count, how they're organized)
+   - What each indicator entry gives the agent (description only? data hints? thresholds?) and what it doesn't
+   - Do not summarize or restate individual indicators
+3. Reference docs
+   - One short paragraph per doc: what it is and what it contributes to the spec (procedure steps, data definitions, report templates, rules)
+   - Note which doc sections the spec should follow directly
+4. Available data
+   - BQ tables/fields known to be accessible (from the POC or docs), and anything referenced but unconfirmed (UNKNOWN)
+
+Log the session in session_log.md.
